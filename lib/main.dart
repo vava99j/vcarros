@@ -37,10 +37,17 @@ class _MyHomePageState extends State<MyHomePage> {
   String foto = '';
   /*int _counterPouza = 0;*/
   int _counter = 0;
+  int _tamanho = 0;
 
   void _horario(i) {
     setState(() {
       horario = i;
+    });
+  }
+
+  void _tam(t) {
+    setState(() {
+      _tamanho = t - 1;
     });
   }
 
@@ -58,16 +65,22 @@ class _MyHomePageState extends State<MyHomePage> {
 
   void _incrementCounter() {
     setState(() {
-      _counter++;
+      if (_counter == _tamanho) {
+        _counter = 0;
+      } else {
+        _counter++;
+      }
     });
   }
 
   void _desincrementCounter() {
-    if (_counter > 0) {
-      setState(() {
+    setState(() {
+      if (_counter > 0 || _counter == _tamanho) {
         _counter--;
-      });
-    }
+      } else {
+        _counter = _tamanho;
+      }
+    });
   }
 
   Future<void> buscarDados() async {
@@ -85,11 +98,14 @@ class _MyHomePageState extends State<MyHomePage> {
         String horarios = item['horarios'];
         String foto = item['foto_url'];
         int id = item['id'];
-        print('Sucesso: $data');
+        int tam = data.length;
+        print('Count: $_counter');
+        print('Tam: $_tamanho');
 
         _horario(horarios);
         _id(id);
         _foto(foto);
+        _tam(tam);
       } else {
         print('Erro: status ${response.statusCode}');
       }
@@ -99,7 +115,101 @@ class _MyHomePageState extends State<MyHomePage> {
     ;
   }
 
+  Future<void> modalE(i) async {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Stack(
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      '$i',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.blue,
+                      ),
+                    ),
+                    SizedBox(height: 20),
+                    Text("Conteúdo do modal"),
+                  ],
+                ),
+              ),
+              Positioned(
+                top: 10,
+                right: 10,
+                child: IconButton(
+                  icon: Icon(Icons.close),
+                  onPressed: () => Navigator.pop(context),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> modalD(i) async {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Stack(
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      'realmente excluir?',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.blue,
+                      ),
+                    ),
+                    SizedBox(height: 20),
+                     IconButton(
+                  icon: Icon(Icons.delete_forever),
+                  onPressed: () => Navigator.pop(context),
+                ),
+                  ],
+                ),
+              ),
+              Positioned(
+                top: 10,
+                right: 10,
+                child: IconButton(
+                  icon: Icon(Icons.close),
+                  onPressed: () => Navigator.pop(context),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
   @override
+  void initState() {
+    super.initState();
+    buscarDados();
+  }
+
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
@@ -138,7 +248,7 @@ class _MyHomePageState extends State<MyHomePage> {
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                 ElevatedButton(
+                ElevatedButton(
                   onPressed: () {
                     _desincrementCounter();
                     buscarDados();
@@ -149,39 +259,38 @@ class _MyHomePageState extends State<MyHomePage> {
             ),
             const SizedBox(height: 20),
 
-      Container(
-  padding: const EdgeInsets.all(20),
-  margin: const EdgeInsets.all(20),
-  decoration: BoxDecoration(
-    color: Colors.white,
-    borderRadius: BorderRadius.circular(15),
-    boxShadow: [
-      BoxShadow(
-        color: Colors.black12,
-        blurRadius: 10,
-        offset: Offset(0, 4),
-      ),
-    ],
-  ),
-  child: Column(
-    mainAxisAlignment: MainAxisAlignment.center,
-    children: [
-      const SizedBox(height: 10),
+            Container(
+              padding: const EdgeInsets.all(20),
+              margin: const EdgeInsets.all(5),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(15),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black12,
+                    blurRadius: 10,
+                    offset: Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const SizedBox(height: 5),
 
-      Text(
-        horario,
-        style: TextStyle(
-          fontSize: 15,
-          fontWeight: FontWeight.bold,
-          color: Colors.blue,
-        ),
-      ),
+                  Text(
+                    horario,
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.blue,
+                    ),
+                  ),
 
-      if (foto != '')
-        Image.network(foto, width: 200, height: 200),
-    ],
-  ),
-),
+                  if (foto != '') Image.network(foto, width: 200, height: 200),
+                ],
+              ),
+            ),
 
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -216,7 +325,7 @@ class _MyHomePageState extends State<MyHomePage> {
           FloatingActionButton(
             heroTag: "Edit",
             onPressed: () {
-              print('sera edit');
+              modalE(id);
             },
             child: const Icon(Icons.edit),
           ),
@@ -226,7 +335,7 @@ class _MyHomePageState extends State<MyHomePage> {
           FloatingActionButton(
             heroTag: "Excluir",
             onPressed: () {
-              print('sera excluir');
+              modalD(id);
             },
             child: const Icon(Icons.delete_forever),
           ),
