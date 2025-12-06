@@ -1,7 +1,9 @@
 import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:vcarros/src/api/patch.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:vcarros/src/api/post.dart';
 
 void main() {
   runApp(const MyApp());
@@ -15,7 +17,9 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'vcarros',
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurpleAccent),
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: const Color.fromARGB(255, 1, 2, 68),
+        ),
       ),
       home: const MyHomePage(title: ''),
     );
@@ -32,22 +36,37 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   String userId = '1';
-  String horario = '';
-  int id = 0;
+  String marca = "";
+  String modelo = "";
+  String descricao = "";
+  String contato = "";
+  String preco = "";
+  String id = '';
   String foto = '';
-  /*int _counterPouza = 0;*/
   int _counter = 0;
   int _tamanho = 0;
 
-  void _horario(i) {
+  void _marca(i) {
     setState(() {
-      horario = i;
+      marca = i;
     });
   }
 
-  void _tam(t) {
+  void _contato(c) {
     setState(() {
-      _tamanho = t - 1;
+      contato = c;
+    });
+  }
+
+  void _preco(p) {
+    setState(() {
+      preco = p;
+    });
+  }
+
+  void _modelo(i) {
+    setState(() {
+      modelo = i;
     });
   }
 
@@ -57,9 +76,21 @@ class _MyHomePageState extends State<MyHomePage> {
     });
   }
 
+  void _des(t) {
+    setState(() {
+      descricao = t;
+    });
+  }
+
   void _foto(i) {
     setState(() {
       foto = i;
+    });
+  }
+
+  void _tam(t) {
+    setState(() {
+      _tamanho = t - 1;
     });
   }
 
@@ -75,7 +106,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
   void _desincrementCounter() {
     setState(() {
-      if (_counter > 0 || _counter == _tamanho) {
+      if (_counter > 0) {
         _counter--;
       } else {
         _counter = _tamanho;
@@ -84,9 +115,7 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Future<void> buscarDados() async {
-    final url = Uri.parse(
-      'https://servidor-632w.onrender.com/plantas/${userId}',
-    );
+    final url = Uri.parse('http://localhost:8000/api/listar.php');
 
     try {
       final response = await http.get(url);
@@ -94,18 +123,19 @@ class _MyHomePageState extends State<MyHomePage> {
       if (response.statusCode == 200) {
         final List data = jsonDecode(response.body);
         final item = data[_counter];
-
-        String horarios = item['horarios'];
-        String foto = item['foto_url'];
-        int id = item['id'];
-        int tam = data.length;
         print('Count: $_counter');
         print('Tam: $_tamanho');
+        print("id: $id");
 
-        _horario(horarios);
-        _id(id);
-        _foto(foto);
-        _tam(tam);
+        _marca(item['marca'].toString());
+        _preco(item['preco']);
+        _contato(item['contato']);
+        _id(item['id'].toString());
+        _modelo(item['modelo']);
+        _des(item['descricao']);
+        _foto(item['ft1']);
+        _tam(data.length);
+        print("id: $id");
       } else {
         print('Erro: status ${response.statusCode}');
       }
@@ -115,7 +145,24 @@ class _MyHomePageState extends State<MyHomePage> {
     ;
   }
 
-  Future<void> modalE(i) async {
+  Future<void> modalEeN(String t, {String? i}) async {
+    final TextEditingController marcaController = TextEditingController();
+    final TextEditingController modeloController = TextEditingController();
+    final TextEditingController descricaoController = TextEditingController();
+    final TextEditingController precoController = TextEditingController();
+    final TextEditingController contatoController = TextEditingController();
+    final TextEditingController ft1controller = TextEditingController();
+    final TextEditingController ft2controller = TextEditingController();
+    final TextEditingController ft3controller = TextEditingController();
+    final TextEditingController ft4controller = TextEditingController();
+    final TextEditingController ft5controller = TextEditingController();
+    if (i != null) {
+      marcaController.text = marca;
+      modeloController.text = modelo;
+      descricaoController.text = descricao;
+      precoController.text = preco;
+      contatoController.text = contato;
+    }
     showDialog(
       context: context,
       builder: (context) {
@@ -130,16 +177,80 @@ class _MyHomePageState extends State<MyHomePage> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Text(
-                      '$i',
+                     Text(
+                      t, // Ou mudar dinamicamente para 'Criar' se i == null
                       style: TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
                         color: Colors.blue,
                       ),
                     ),
-                    SizedBox(height: 20),
-                    Text("Conteúdo do modal"),
+                    const SizedBox(height: 20),
+                    const Text("Conteúdo do modal"),
+                    TextField(
+                      controller: marcaController,
+                      decoration: const InputDecoration(labelText: "Marca"),
+                    ),
+                    TextField(
+                      controller: modeloController,
+                      decoration: const InputDecoration(labelText: "Modelo"),
+                    ),
+                    TextField(
+                      controller: descricaoController,
+                      decoration: const InputDecoration(labelText: "Descrição"),
+                    ),
+                    TextField(
+                      controller: precoController,
+                      decoration: const InputDecoration(labelText: "Preço"),
+                    ),
+                    TextField(
+                      controller: contatoController,
+                      decoration: const InputDecoration(labelText: "Contato"),
+                    ),
+                    const SizedBox(
+                      height: 20,
+                    ), // Mudei para HEIGHT pois é uma Column
+                    // --- AQUI ESTÁ A CORREÇÃO (Collection If) ---
+                    if (i != null)
+                      IconButton(
+                        icon: const Icon(Icons.edit),
+                        onPressed: () {
+                          atualizarDados(
+                            id,
+                            marcaController.text,
+                            modeloController.text,
+                            descricaoController.text,
+                            precoController.text,
+                            contatoController.text,
+                            "foto",
+                            f2: "",
+                            f3: "",
+                            f4: "",
+                            f5: "",
+                          );
+                          Navigator.pop(context); // Fecha o modal após ação
+                        },
+                      )
+                    else
+                      IconButton(
+                        icon: const Icon(Icons.add),
+                        onPressed: () {
+                          criarDados(
+                            "1",
+                            "bundinha",
+                            "hora",
+                            "fsdfsgfsdgfdg",
+                            "",
+                            "",
+                            "",
+                            "e",
+                            "f",
+                            "g",
+                          );
+                          Navigator.pop(context); // Fecha o modal após ação
+                        },
+                      ),
+                    // -------------------------------------------
                   ],
                 ),
               ),
@@ -147,7 +258,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 top: 10,
                 right: 10,
                 child: IconButton(
-                  icon: Icon(Icons.close),
+                  icon: const Icon(Icons.close),
                   onPressed: () => Navigator.pop(context),
                 ),
               ),
@@ -182,10 +293,10 @@ class _MyHomePageState extends State<MyHomePage> {
                       ),
                     ),
                     SizedBox(height: 20),
-                     IconButton(
-                  icon: Icon(Icons.delete_forever),
-                  onPressed: () => Navigator.pop(context),
-                ),
+                    IconButton(
+                      icon: Icon(Icons.delete_forever),
+                      onPressed: () => Navigator.pop(context),
+                    ),
                   ],
                 ),
               ),
@@ -221,30 +332,6 @@ class _MyHomePageState extends State<MyHomePage> {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            /* Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                  ElevatedButton(
-                  onPressed: _desincrementCounter,
-                  child: const Icon(Icons.remove),
-                ),
-                const SizedBox(width: 10),
-                const Text('Pouza deu '),
-                Text(
-                  '$_counterPouza',
-                  style: Theme.of(context).textTheme.headlineMedium,
-                ),
-
-                const Text(' vezes pro Vava'),
-
-                const SizedBox(width: 10),
-
-                ElevatedButton(
-                  onPressed: _incrementCounter,
-                  child: const Icon(Icons.add),
-                ),
-              ],
-            ),*/
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -277,9 +364,32 @@ class _MyHomePageState extends State<MyHomePage> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   const SizedBox(height: 5),
-
                   Text(
-                    horario,
+                    id,
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.blue,
+                    ),
+                  ),
+                  Text(
+                    marca,
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.blue,
+                    ),
+                  ),
+                  Text(
+                    modelo,
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.blue,
+                    ),
+                  ),
+                  Text(
+                    descricao,
                     style: TextStyle(
                       fontSize: 15,
                       fontWeight: FontWeight.bold,
@@ -296,9 +406,9 @@ class _MyHomePageState extends State<MyHomePage> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 ElevatedButton(
-                  onPressed: () {
-                    buscarDados();
+                  onPressed: () async {
                     _incrementCounter();
+                    await buscarDados();
                   },
                   child: const Icon(Icons.arrow_right),
                 ),
@@ -315,7 +425,7 @@ class _MyHomePageState extends State<MyHomePage> {
           FloatingActionButton(
             heroTag: "Novo",
             onPressed: () {
-              print('sera novo');
+              modalEeN("Novo");
             },
             child: const Icon(Icons.add),
           ),
@@ -325,7 +435,7 @@ class _MyHomePageState extends State<MyHomePage> {
           FloatingActionButton(
             heroTag: "Edit",
             onPressed: () {
-              modalE(id);
+              modalEeN("Editar", i: id);
             },
             child: const Icon(Icons.edit),
           ),

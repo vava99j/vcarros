@@ -1,23 +1,27 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 
-Future<void> buscarDados() async {
-  final url = Uri.parse('https://servidor-632w.onrender.com/plantas/2');
+Future<void> buscarCarros() async {
+  final url = Uri.parse('http://localhost:8000/api/listar.php'); // coloque sua URL
 
   try {
     final response = await http.get(url);
 
     if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
-      print('Sucesso: $data');
+      final List carros = jsonDecode(response.body);
+      print('Carros: $carros');
+      
+      for (var carro in carros) {
+        print("Modelo: ${carro['modelo']}, Marca: ${carro['marca']}, Preço: ${carro['preco']}");
+      }
     } else {
       print('Erro: status ${response.statusCode}');
     }
   } catch (e) {
-    print('Falha ao fazer GET: $e');
+    print('Falha ao buscar carros: $e');
   }
 }
 
-void main(List<String> args) {
-  buscarDados();
+void main() {
+  buscarCarros();
 }
