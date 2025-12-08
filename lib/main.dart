@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:vcarros/src/api/delete.dart';
 import 'package:vcarros/src/api/patch.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:vcarros/src/api/post.dart';
@@ -125,14 +126,13 @@ class _MyHomePageState extends State<MyHomePage> {
         final item = data[_counter];
         print('Count: $_counter');
         print('Tam: $_tamanho');
-        print("id: $id");
 
         _marca(item['marca'].toString());
         _preco(item['preco']);
         _contato(item['contato']);
         _id(item['id'].toString());
         _modelo(item['modelo']);
-        _des(item['descricao']);
+        _des(item['descricao'].toString());
         _foto(item['ft1']);
         _tam(data.length);
         print("id: $id");
@@ -177,7 +177,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                     Text(
+                    Text(
                       t, // Ou mudar dinamicamente para 'Criar' se i == null
                       style: TextStyle(
                         fontSize: 20,
@@ -209,26 +209,25 @@ class _MyHomePageState extends State<MyHomePage> {
                     ),
                     const SizedBox(
                       height: 20,
-                    ), // Mudei para HEIGHT pois é uma Column
-                    // --- AQUI ESTÁ A CORREÇÃO (Collection If) ---
+                    ), 
                     if (i != null)
                       IconButton(
                         icon: const Icon(Icons.edit),
                         onPressed: () {
                           atualizarDados(
                             id,
-                            marcaController.text,
-                            modeloController.text,
-                            descricaoController.text,
-                            precoController.text,
-                            contatoController.text,
-                            "foto",
+                            ma: marcaController.text,
+                            mo: modeloController.text,
+                            p: precoController.text,
+                            c: contatoController.text,
+                            f1: "foto",
+                            d: descricaoController.text,
                             f2: "",
                             f3: "",
                             f4: "",
                             f5: "",
                           );
-                          Navigator.pop(context); // Fecha o modal após ação
+                          Navigator.pop(context);
                         },
                       )
                     else
@@ -236,21 +235,20 @@ class _MyHomePageState extends State<MyHomePage> {
                         icon: const Icon(Icons.add),
                         onPressed: () {
                           criarDados(
-                            "1",
-                            "bundinha",
-                            "hora",
-                            "fsdfsgfsdgfdg",
+                            marcaController.text,
+                            modeloController.text,
+                            descricaoController.text,
+                            precoController.text,
+                            contatoController.text,
+                            "foto",
                             "",
                             "",
                             "",
-                            "e",
-                            "f",
-                            "g",
+                            "",
                           );
-                          Navigator.pop(context); // Fecha o modal após ação
+                          Navigator.pop(context); 
                         },
                       ),
-                    // -------------------------------------------
                   ],
                 ),
               ),
@@ -277,38 +275,55 @@ class _MyHomePageState extends State<MyHomePage> {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(20),
           ),
-          child: Stack(
-            children: [
-              Padding(
-                padding: const EdgeInsets.all(20),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      'realmente excluir?',
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.blue,
-                      ),
+          child: Container(
+            width: 300,
+            height: 200,
+            padding: const EdgeInsets.all(20),
+
+            child: Stack(
+              children: [
+                Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(2),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          "APAGAR MESMO?",
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.blue,
+                          ),
+                        ),
+
+                        const SizedBox(height: 20),
+                        const Text("Conteúdo do modal"),
+
+                        const SizedBox(height: 20),
+
+                        IconButton(
+                          icon: const Icon(Icons.delete_forever),
+                          onPressed: () {
+                            excluirDados(id);
+                            Navigator.pop(context);
+                          },
+                        ),
+                      ],
                     ),
-                    SizedBox(height: 20),
-                    IconButton(
-                      icon: Icon(Icons.delete_forever),
-                      onPressed: () => Navigator.pop(context),
-                    ),
-                  ],
+                  ),
                 ),
-              ),
-              Positioned(
-                top: 10,
-                right: 10,
-                child: IconButton(
-                  icon: Icon(Icons.close),
-                  onPressed: () => Navigator.pop(context),
+
+                Positioned(
+                  top: 10,
+                  right: 10,
+                  child: IconButton(
+                    icon: const Icon(Icons.close),
+                    onPressed: () => Navigator.pop(context),
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         );
       },

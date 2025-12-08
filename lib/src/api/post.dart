@@ -11,7 +11,7 @@ Future<void> criarDados(ma, mo, d, p, c, f1, f2, f3, f4, f5) async {
       body: jsonEncode({
      "marca": ma,
      "modelo": mo,
-     "descrição": d,
+     "descricao": d,
      "preco": p,
      "contato":c,
      "ft1":f1,
@@ -22,7 +22,7 @@ Future<void> criarDados(ma, mo, d, p, c, f1, f2, f3, f4, f5) async {
      }),
     );
 
-    if (response.statusCode == 200 || response.statusCode == 204) {
+    if (response.statusCode == 201) {
       final data = jsonDecode(response.body);
       print('Sucesso: $data');
     } else {

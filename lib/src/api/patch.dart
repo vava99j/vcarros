@@ -3,12 +3,12 @@ import 'package:http/http.dart' as http;
 
 Future<void> atualizarDados(
   i,
-  ma,
-  mo,
-  d,
-  p,
-  c,
-  f1, {
+ { String? ma,
+  String? mo,
+  String? p,
+  String? c,
+  String? f1, 
+  String? d,
   String? f2,
   String? f3,
   String? f4,
@@ -21,10 +21,10 @@ Future<void> atualizarDados(
       url,
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({
-        "id":i,
+        "id": i,
         "marca": ma,
         "modelo": mo,
-        "descrição": d,
+        "descricao": d,
         "preco": p,
         "contato": c,
         "ft1": f1,
@@ -45,20 +45,4 @@ Future<void> atualizarDados(
   } catch (e) {
     print('Falha ao fazer PATCH: $e');
   }
-}
-
-void main(List<String> args) {
-  atualizarDados(
-    "2",
-    "1",
-    "bundinha",
-    "hora",
-    "fsdfsgfsdgfdg",
-    "",
-    "",
-    f2: "",
-    f3: "e",
-    f4: "f",
-    f5: "g",
-  );
 }
