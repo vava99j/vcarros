@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 
-Future<void> criarCarros(ma, mo, d, p, c, f1, f2, f3, f4, f5) async {
+Future<void> criarCarros(ma, mo, d, p, con,com, f1, f2, f3, f4, f5) async {
   final url = Uri.parse(
     'https://vcar-servidor.onrender.com/api/cars/cadastrar.php',
   );
@@ -15,7 +15,8 @@ Future<void> criarCarros(ma, mo, d, p, c, f1, f2, f3, f4, f5) async {
         "modelo": mo,
         "descricao": d,
         "preco": p,
-        "contato": c,
+        "contato": con,
+        "comprou": com,
         "ft1": f1,
         "ft2": f2,
         "ft3": f3,
@@ -42,6 +43,7 @@ void main(List<String> args) {
     "bundinha",
     "hora",
     "fsdfsgfsdgfdg",
+    "com",
     "",
     "",
     "",

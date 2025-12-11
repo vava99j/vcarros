@@ -9,6 +9,8 @@ import 'package:image_picker/image_picker.dart';
 import 'package:vcarros/src/api/carros/post.dart';
 import 'dart:io';
 
+import 'package:vcarros/src/api/financeiro/post.dart';
+
 void main() {
   runApp(const MyApp());
 }
@@ -147,7 +149,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
   Future<void> escolherImagens() async {
     final ImagePicker picker = ImagePicker();
-    final List<XFile>? result = await picker.pickMultiImage();
+    final List<XFile> result = await picker.pickMultiImage();
 
     if (result != null) {
       for (var img in result) {
@@ -177,6 +179,7 @@ class _MyHomePageState extends State<MyHomePage> {
       descricaoController.text = carros[_counter]['descricao'];
       precoController.text = carros[_counter]['preco'];
       contatoController.text = carros[_counter]['contato'];
+      comprouController.text = carros[_counter]['comprou'];
     }
     showDialog(
       context: context,
@@ -262,6 +265,7 @@ class _MyHomePageState extends State<MyHomePage> {
                             descricaoController.text,
                             precoController.text,
                             contatoController.text,
+                            comprouController.text,
                             imagens.isNotEmpty ? imagens[0] : "",
                             imagens.isNotEmpty ? imagens[1] : "",
                             imagens.isNotEmpty ? imagens[2] : "",
@@ -321,7 +325,7 @@ class _MyHomePageState extends State<MyHomePage> {
                             color: Colors.red,
                           ),
                         ),
-                           Text(
+                        Text(
                           "verifique o quanto gastou no editar",
                           style: TextStyle(
                             fontSize: 10,
@@ -329,7 +333,7 @@ class _MyHomePageState extends State<MyHomePage> {
                             color: Colors.red,
                           ),
                         ),
-                            Text(
+                        Text(
                           "é importante para o financeiro depois.",
                           style: TextStyle(
                             fontSize: 10,
@@ -337,11 +341,26 @@ class _MyHomePageState extends State<MyHomePage> {
                             color: Colors.red,
                           ),
                         ),
-                        const SizedBox(height: 20),
+                        TextField(
+                          controller: vendeuController,
+                          decoration: const InputDecoration(
+                            labelText: "Vendeu",
+                          ),
+                        ),
+                        SizedBox(height: 20),
 
                         IconButton(
-                          icon: const Icon(Icons.delete_forever, color: Colors.red,),
+                          icon: const Icon(
+                            Icons.delete_forever,
+                            color: Colors.red,
+                          ),
                           onPressed: () {
+                            criarFinanceiro(
+                              carros[_counter]["marca"],
+                              carros[_counter]["modelo"],
+                              carros[_counter]["comprou"],
+                              vendeuController.text,
+                            );
                             excluirDados(carros[_counter]["id"]);
                             Navigator.pop(context);
                           },
@@ -382,6 +401,7 @@ class _MyHomePageState extends State<MyHomePage> {
     carregar();
   }
 
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
@@ -402,7 +422,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 ),
               ],
             ),
-            Container(
+            SizedBox(
               width: 300,
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
