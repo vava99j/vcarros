@@ -1,10 +1,13 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'package:vcarros/src/api/delete.dart';
-import 'package:vcarros/src/api/patch.dart';
+import 'package:vcarros/financeiro.dart';
+import 'package:vcarros/src/api/carros/delete.dart';
+import 'package:vcarros/src/api/carros/get.dart';
+import 'package:vcarros/src/api/carros/patch.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:vcarros/src/api/post.dart';
+import 'package:vcarros/src/api/carros/post.dart';
+import 'dart:io';
 
 void main() {
   runApp(const MyApp());
@@ -44,8 +47,13 @@ class _MyHomePageState extends State<MyHomePage> {
   String preco = "";
   String id = '';
   String foto = '';
+  String comprou = '';
+  String vendeu = '';
   int _counter = 0;
   int _tamanho = 0;
+  List carros = [];
+  List<String> imagens = [];
+  String um = 'ft1';
 
   void _marca(i) {
     setState(() {
@@ -77,15 +85,30 @@ class _MyHomePageState extends State<MyHomePage> {
     });
   }
 
+  void _foto(i) {
+    setState(() {
+      foto = i;
+      print(foto);
+    });
+  }
+
   void _des(t) {
     setState(() {
       descricao = t;
     });
   }
 
-  void _foto(i) {
+  void _vendeu(i) {
     setState(() {
-      foto = i;
+      vendeu = i;
+      print(vendeu);
+    });
+  }
+
+  void _comprou(i) {
+    setState(() {
+      comprou = i;
+      print(comprou);
     });
   }
 
@@ -103,9 +126,10 @@ class _MyHomePageState extends State<MyHomePage> {
         _counter++;
       }
     });
+    print(_counter);
   }
 
-  void _desincrementCounter() {
+  void _desIncrementCounter() {
     setState(() {
       if (_counter > 0) {
         _counter--;
@@ -113,55 +137,46 @@ class _MyHomePageState extends State<MyHomePage> {
         _counter = _tamanho;
       }
     });
+    print(_counter);
   }
 
-  Future<void> buscarDados() async {
-    final url = Uri.parse('http://localhost:8000/api/listar.php');
+  Future<String> converterBase64(XFile file) async {
+    final bytes = await File(file.path).readAsBytes();
+    return base64Encode(bytes);
+  }
 
-    try {
-      final response = await http.get(url);
+  Future<void> escolherImagens() async {
+    final ImagePicker picker = ImagePicker();
+    final List<XFile>? result = await picker.pickMultiImage();
 
-      if (response.statusCode == 200) {
-        final List data = jsonDecode(response.body);
-        final item = data[_counter];
-        print('Count: $_counter');
-        print('Tam: $_tamanho');
-
-        _marca(item['marca'].toString());
-        _preco(item['preco']);
-        _contato(item['contato']);
-        _id(item['id'].toString());
-        _modelo(item['modelo']);
-        _des(item['descricao'].toString());
-        _foto(item['ft1']);
-        _tam(data.length);
-        print("id: $id");
-      } else {
-        print('Erro: status ${response.statusCode}');
+    if (result != null) {
+      for (var img in result) {
+        final base64String = await converterBase64(img);
+        print(base64String);
+        imagens.add(base64String);
+        _foto(base64String);
       }
-    } catch (e) {
-      print('Falha ao fazer GET: $e');
     }
-    ;
   }
 
-  Future<void> modalEeN(String t, {String? i}) async {
+  Future<void> modalEeN(String t, {int? i}) async {
     final TextEditingController marcaController = TextEditingController();
     final TextEditingController modeloController = TextEditingController();
     final TextEditingController descricaoController = TextEditingController();
     final TextEditingController precoController = TextEditingController();
     final TextEditingController contatoController = TextEditingController();
+    final TextEditingController comprouController = TextEditingController();
     final TextEditingController ft1controller = TextEditingController();
     final TextEditingController ft2controller = TextEditingController();
     final TextEditingController ft3controller = TextEditingController();
     final TextEditingController ft4controller = TextEditingController();
     final TextEditingController ft5controller = TextEditingController();
     if (i != null) {
-      marcaController.text = marca;
-      modeloController.text = modelo;
-      descricaoController.text = descricao;
-      precoController.text = preco;
-      contatoController.text = contato;
+      marcaController.text = carros[_counter]['marca'];
+      modeloController.text = carros[_counter]['modelo'];
+      descricaoController.text = carros[_counter]['descricao'];
+      precoController.text = carros[_counter]['preco'];
+      contatoController.text = carros[_counter]['contato'];
     }
     showDialog(
       context: context,
@@ -178,7 +193,7 @@ class _MyHomePageState extends State<MyHomePage> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
-                      t, // Ou mudar dinamicamente para 'Criar' se i == null
+                      t,
                       style: TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
@@ -186,7 +201,6 @@ class _MyHomePageState extends State<MyHomePage> {
                       ),
                     ),
                     const SizedBox(height: 20),
-                    const Text("Conteúdo do modal"),
                     TextField(
                       controller: marcaController,
                       decoration: const InputDecoration(labelText: "Marca"),
@@ -207,20 +221,28 @@ class _MyHomePageState extends State<MyHomePage> {
                       controller: contatoController,
                       decoration: const InputDecoration(labelText: "Contato"),
                     ),
-                    const SizedBox(
-                      height: 20,
-                    ), 
+                    TextField(
+                      controller: comprouController,
+                      decoration: const InputDecoration(labelText: "Gastou"),
+                    ),
+                    const SizedBox(height: 20),
+                    ElevatedButton(
+                      onPressed: escolherImagens,
+                      child: Text("Selecionar imagens"),
+                    ),
+
+                    const SizedBox(height: 20),
                     if (i != null)
                       IconButton(
                         icon: const Icon(Icons.edit),
                         onPressed: () {
-                          atualizarDados(
+                          atualizarCarros(
                             id,
                             ma: marcaController.text,
                             mo: modeloController.text,
                             p: precoController.text,
                             c: contatoController.text,
-                            f1: "foto",
+                            f1: foto,
                             d: descricaoController.text,
                             f2: "",
                             f3: "",
@@ -234,19 +256,20 @@ class _MyHomePageState extends State<MyHomePage> {
                       IconButton(
                         icon: const Icon(Icons.add),
                         onPressed: () {
-                          criarDados(
+                          criarCarros(
                             marcaController.text,
                             modeloController.text,
                             descricaoController.text,
                             precoController.text,
                             contatoController.text,
-                            "foto",
-                            "",
-                            "",
-                            "",
-                            "",
+                            imagens.isNotEmpty ? imagens[0] : "",
+                            imagens.isNotEmpty ? imagens[1] : "",
+                            imagens.isNotEmpty ? imagens[2] : "",
+                            imagens.isNotEmpty ? imagens[3] : "",
+                            imagens.isNotEmpty ? imagens[4] : "",
                           );
-                          Navigator.pop(context); 
+
+                          Navigator.pop(context);
                         },
                       ),
                   ],
@@ -268,6 +291,8 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Future<void> modalD(i) async {
+    final TextEditingController vendeuController = TextEditingController();
+
     showDialog(
       context: context,
       builder: (context) {
@@ -277,7 +302,7 @@ class _MyHomePageState extends State<MyHomePage> {
           ),
           child: Container(
             width: 300,
-            height: 200,
+            height: 220,
             padding: const EdgeInsets.all(20),
 
             child: Stack(
@@ -293,19 +318,31 @@ class _MyHomePageState extends State<MyHomePage> {
                           style: TextStyle(
                             fontSize: 20,
                             fontWeight: FontWeight.bold,
-                            color: Colors.blue,
+                            color: Colors.red,
                           ),
                         ),
-
-                        const SizedBox(height: 20),
-                        const Text("Conteúdo do modal"),
-
+                           Text(
+                          "verifique o quanto gastou no editar",
+                          style: TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.red,
+                          ),
+                        ),
+                            Text(
+                          "é importante para o financeiro depois.",
+                          style: TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.red,
+                          ),
+                        ),
                         const SizedBox(height: 20),
 
                         IconButton(
-                          icon: const Icon(Icons.delete_forever),
+                          icon: const Icon(Icons.delete_forever, color: Colors.red,),
                           onPressed: () {
-                            excluirDados(id);
+                            excluirDados(carros[_counter]["id"]);
                             Navigator.pop(context);
                           },
                         ),
@@ -330,10 +367,19 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 
+  Future<void> carregar() async {
+    final resultado = await buscarCarros();
+    setState(() {
+      carros = resultado;
+    });
+    print(' carros.lenght ${carros.length}');
+    _tam(carros.length);
+  }
+
   @override
   void initState() {
     super.initState();
-    buscarDados();
+    carregar();
   }
 
   Widget build(BuildContext context) {
@@ -346,86 +392,46 @@ class _MyHomePageState extends State<MyHomePage> {
       body: Center(
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            Row(
+          children: [
+            Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                ElevatedButton(
-                  onPressed: () {
-                    _desincrementCounter();
-                    buscarDados();
-                  },
-                  child: const Icon(Icons.arrow_left),
+                IconButton(
+                  onPressed: _desIncrementCounter,
+                  icon: Icon(Icons.arrow_left),
                 ),
               ],
             ),
-            const SizedBox(height: 20),
-
             Container(
-              padding: const EdgeInsets.all(20),
-              margin: const EdgeInsets.all(5),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(15),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black12,
-                    blurRadius: 10,
-                    offset: Offset(0, 4),
-                  ),
-                ],
-              ),
+              width: 300,
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisSize: MainAxisSize.max,
                 children: [
-                  const SizedBox(height: 5),
-                  Text(
-                    id,
-                    style: TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.blue,
-                    ),
-                  ),
-                  Text(
-                    marca,
-                    style: TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.blue,
-                    ),
-                  ),
-                  Text(
-                    modelo,
-                    style: TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.blue,
-                    ),
-                  ),
-                  Text(
-                    descricao,
-                    style: TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.blue,
-                    ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    mainAxisSize: MainAxisSize.max,
+                    spacing: 4,
+                    children: [
+                      Text(carros[_counter]['marca'].toString()),
+                      Text(carros[_counter]['modelo'].toString()),
+                    ],
                   ),
 
-                  if (foto != '') Image.network(foto, width: 200, height: 200),
+                  Text(carros[_counter]['descricao'].toString()),
+                  Text(carros[_counter]['preco'].toString()),
+                  Text(carros[_counter][um].toString()),
+                  Text(carros[_counter]['comprou'].toString()),
                 ],
               ),
             ),
 
-            Row(
+            Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                ElevatedButton(
-                  onPressed: () async {
-                    _incrementCounter();
-                    await buscarDados();
-                  },
-                  child: const Icon(Icons.arrow_right),
+                IconButton(
+                  onPressed: _incrementCounter,
+                  icon: Icon(Icons.arrow_right),
                 ),
               ],
             ),
@@ -437,33 +443,38 @@ class _MyHomePageState extends State<MyHomePage> {
       floatingActionButton: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          FloatingActionButton(
-            heroTag: "Novo",
+          IconButton(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const SecPage()),
+              );
+            },
+            icon: Icon(Icons.attach_money),
+          ),
+
+          const SizedBox(width: 20),
+          IconButton(
             onPressed: () {
               modalEeN("Novo");
             },
-            child: const Icon(Icons.add),
+            icon: Icon(Icons.add),
           ),
-
           const SizedBox(width: 20),
-
-          FloatingActionButton(
-            heroTag: "Edit",
+          IconButton(
             onPressed: () {
-              modalEeN("Editar", i: id);
+              modalEeN("Editar", i: carros[_counter]["id"]);
             },
-            child: const Icon(Icons.edit),
+            icon: Icon(Icons.edit),
           ),
-
           const SizedBox(width: 20),
-
-          FloatingActionButton(
-            heroTag: "Excluir",
+          IconButton(
             onPressed: () {
-              modalD(id);
+              modalD(carros[_counter]["id"]);
             },
-            child: const Icon(Icons.delete_forever),
+            icon: const Icon(Icons.delete_forever),
           ),
+          const SizedBox(width: 20),
         ],
       ),
     );

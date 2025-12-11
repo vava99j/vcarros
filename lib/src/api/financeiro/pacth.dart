@@ -1,25 +1,20 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 
-Future<void> criarDados(ma, mo, d, p, c, f1, f2, f3, f4, f5) async {
-  final url = Uri.parse('http://localhost:8000/api/cadastrar.php');
+Future<void> criarFinanceiro(ma, mo, c, v) async {
+  final url = Uri.parse('https://vcar-servidor.onrender.com/api/financeiro/cadastrar.php');
 
   try {
     final response = await http.post(
       url,
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({
-     "marca": ma,
-     "modelo": mo,
-     "descricao": d,
-     "preco": p,
-     "contato":c,
-     "ft1":f1,
-     "ft2":f3,
-     "ft3":f3,
-     "ft4":f4,
-     "ft5":f5,
-     }),
+        "marca": ma,
+        "modelo": mo,
+        "comprou": c,
+        "vendeu": v,
+        
+      }),
     );
 
     if (response.statusCode == 201) {
@@ -35,16 +30,10 @@ Future<void> criarDados(ma, mo, d, p, c, f1, f2, f3, f4, f5) async {
 }
 
 void main(List<String> args) {
-  criarDados(
-    "1",
-    "bundinha",
-    "hora",
-    "fsdfsgfsdgfdg",
-    "",
-    "",
-    "",
-    "e",
-    "f",
-    "g",
+  criarFinanceiro(
+    "gm",
+    "onix",
+    "75000",
+    "100000"
   );
 }

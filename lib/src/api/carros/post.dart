@@ -1,41 +1,30 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 
-Future<void> atualizarDados(
-  i,
- { String? ma,
-  String? mo,
-  String? p,
-  String? c,
-  String? f1, 
-  String? d,
-  String? f2,
-  String? f3,
-  String? f4,
-  String? f5,
-}) async {
-  final url = Uri.parse('http://localhost:8000/api/atualizar.php');
+Future<void> criarCarros(ma, mo, d, p, c, f1, f2, f3, f4, f5) async {
+  final url = Uri.parse(
+    'https://vcar-servidor.onrender.com/api/cars/cadastrar.php',
+  );
 
   try {
-    final response = await http.patch(
+    final response = await http.post(
       url,
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({
-        "id": i,
         "marca": ma,
         "modelo": mo,
         "descricao": d,
         "preco": p,
         "contato": c,
         "ft1": f1,
-        "ft2": f3,
+        "ft2": f2,
         "ft3": f3,
         "ft4": f4,
         "ft5": f5,
       }),
     );
 
-    if (response.statusCode == 200 || response.statusCode == 204) {
+    if (response.statusCode == 201) {
       final data = jsonDecode(response.body);
       print('Sucesso: $data');
     } else {
@@ -45,4 +34,19 @@ Future<void> atualizarDados(
   } catch (e) {
     print('Falha ao fazer PATCH: $e');
   }
+}
+
+void main(List<String> args) {
+  criarCarros(
+    "1",
+    "bundinha",
+    "hora",
+    "fsdfsgfsdgfdg",
+    "",
+    "",
+    "",
+    "e",
+    "f",
+    "g",
+  );
 }
